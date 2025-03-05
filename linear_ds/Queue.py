@@ -23,7 +23,7 @@ class Queue:
     def enqueue(self, element):
         # TODO: Add element to rear of queue
         # - Check data type consistency
-        # - Check if queue is full
+        # - Check if queue is full and resize if needed
         # - Update rear index
         # - Add element at rear
         
@@ -39,7 +39,32 @@ class Queue:
         
         # Check if queue is full
         if self.queueCount == self.queueSize:
-            return False, "Queue is full"
+            # Increase size by 1
+            newSize = self.queueSize + 1
+            
+            # Create a new array with the increased size
+            tempElements = [None] * newSize
+            
+            # Copy existing elements to the new array
+            if self.queueCount > 0:
+                i = self.queueFront
+                newIndex = 0
+                count = 0
+                
+                # Copy all elements from old array to new array
+                while count < self.queueCount:
+                    tempElements[newIndex] = self.queueElements[i]
+                    i = (i + 1) % self.queueSize
+                    newIndex += 1
+                    count += 1
+                    
+                # Update front and rear indices for the new array
+                self.queueFront = 0
+                self.queueRear = self.queueCount - 1
+            
+            # Update the queue size and elements
+            self.queueSize = newSize
+            self.queueElements = tempElements
             
         # If queue is empty, set front to 0
         if self.queueFront == -1:
