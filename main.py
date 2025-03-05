@@ -1,338 +1,644 @@
-# Import all required modules
-from utils import (display_menu, display_array_menu, display_linked_list_menu,
-                 display_stack_menu, display_queue_menu, display_binary_tree_menu)
+import streamlit as st
+import sys
+import os
+from datetime import datetime
+
+# Add the repository directory to the path so we can import the modules
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+# Import the data structure classes
 from linear_ds.Array import Array
 from linear_ds.LinkedList import LinkedList
 from linear_ds.Stack import Stack
 from linear_ds.Queue import Queue
 from hierarchical_ds.BinaryTree import BinaryTree
 
-def main():
-    # Initialize data structures
-    arr = None
-    linked_list = None
-    stack = None
-    queue = None
-    binary_tree = None
+# Set page title and configuration
+st.set_page_config(
+    page_title="Data Structures Toolkit",
+    page_icon=":material/analytics:",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+
+# Add some custom CSS to make the app look nice
+st.markdown("""
+    <style>
+    .success-message {
+        background-color: #d4edda;
+        color: #155724;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .error-message {
+        background-color: #f8d7da;
+        color: #721c24;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .warning-message {
+        background-color: #fff3cd;
+        color: #856404;
+        padding: 10px;
+        border-radius: 5px;
+        margin-bottom: 10px;
+    }
+    .linked-list-container {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        overflow-x: auto;
+        padding: 10px 0;
+    }
+    .linked-list-node {
+        border: 2px solid #4e8df5;
+        border-radius: 5px;
+        padding: 10px;
+        text-align: center;
+        background-color: #e6f0ff;
+        width: 80px;
+        min-width: 80px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-right: 5px;
+    }
+    .linked-list-arrow {
+        color: #4e8df5;
+        font-size: 20px;
+        margin: 0 5px;
+    }
+    </style>
+    """, unsafe_allow_html=True)
+
+def success_message(message):
+    st.markdown(f'<div class="success-message">{message}</div>', unsafe_allow_html=True)
     
-    while True:
-        choice = display_menu()
-        
-        # Main Menu
-        if choice == '1':  # Array
-            arr = handle_array(arr)
-        elif choice == '2':  # Linked List
-            linked_list = handle_linked_list(linked_list)
-        elif choice == '3':  # Stack
-            stack = handle_stack(stack)
-        elif choice == '4':  # Queue
-            queue = handle_queue(queue)
-        elif choice == '5':  # Binary Tree
-            binary_tree = handle_binary_tree(binary_tree)
-        elif choice == '6':  # Exit
-            print("Thank you for using the Data Structures Toolkit!")
-            break
-        else:
-            print("Invalid choice. Please try again.")
+def error_message(message):
+    st.markdown(f'<div class="error-message">{message}</div>', unsafe_allow_html=True)
+    
+def warning_message(message):
+    st.markdown(f'<div class="warning-message">{message}</div>', unsafe_allow_html=True)
 
-def handle_array(arr):
-    while True:
-        choice = display_array_menu()
+# Initialize session state for data structures if not already initialized
+if 'array' not in st.session_state:
+    st.session_state.array = None
+    
+if 'linked_list' not in st.session_state:
+    st.session_state.linked_list = None
+    
+if 'stack' not in st.session_state:
+    st.session_state.stack = None
+    
+if 'queue' not in st.session_state:
+    st.session_state.queue = None
+    
+if 'binary_tree' not in st.session_state:
+    st.session_state.binary_tree = None
+
+# Initialize message history
+if 'messages' not in st.session_state:
+    st.session_state.messages = []
+
+# Function to convert input to appropriate type
+def convert_input(value):
+    # Try to convert to int
+    try:
+        return int(value)
+    except ValueError:
+        # Try to convert to float
+        try:
+            return float(value)
+        except ValueError:
+            # Keep as string
+            return value
+
+# Main App Layout
+st.title("Data Structures Toolkit")
+st.write("Machine Problem 1 - COSC 203 Design and Analysis of Algorithms")
+st.caption("By: John Paul Curada of BS CS 2-5")
+
+# Create tabs for each data structure
+tabs = st.tabs(["Array", "Linked List", "Stack", "Queue", "Binary Search Tree"])
+
+# Array Tab
+with tabs[0]:    
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        st.subheader("Operations")
+        if st.button("Create Empty Array", key="create_array"):
+            st.session_state.array = Array()
+            st.session_state.array.create_array()
+            success_message("Empty array created successfully with default size of 5.")
+            st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Empty array created"})
         
-        if choice == '0':  # Return to main menu
-            return arr
+        # Only show these operations if array exists
+        if st.session_state.array is not None:
+            element_input = st.text_input("Element value:", key="array_element")
             
-        # Create array if not exists for other operations
-        if arr is None and choice != '1':
-            print("Please create an array first.")
-            continue
+            if st.button("Insert Element", key="insert_array"):
+                if element_input:
+                    element = convert_input(element_input)
+                    success, message = st.session_state.array.insert(element)
+                    if success:
+                        success_message(message)
+                    else:
+                        error_message(message)
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Insert attempt: {message}"})
+                else:
+                    warning_message("Please enter an element value")
             
-        if choice == '1':  # Create an Empty Array
-            arr = Array()  # Use default size of 5
-            arr.create_array()
-            print("Empty array created successfully with default size of 5.")
+            if st.button("Delete Element", key="delete_array"):
+                if element_input:
+                    element = convert_input(element_input)
+                    success, message = st.session_state.array.delete(element)
+                    if success:
+                        success_message(message)
+                    else:
+                        error_message(message)
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Delete attempt: {message}"})
+                else:
+                    warning_message("Please enter an element value")
             
-        elif choice == '2':  # Insert elements
-            element = input("Enter element to insert: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
+            if st.button("Sort (Ascending)", key="sort_asc"):
+                sorted_arr = st.session_state.array.sort_asc()
+                
+                # Actually update the array elements to match sorted order
+                i = 0
+                while i < st.session_state.array.arrCount:
+                    st.session_state.array.arrElements[i] = sorted_arr[i]
+                    i += 1
                     
-            success, message = arr.insert(element)
-            print(message)
+                success_message("Array sorted in ascending order")
+                st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Array sorted in ascending order"})
             
-        elif choice == '3':  # Delete an element
-            element = input("Enter element to delete: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
+            if st.button("Sort (Descending)", key="sort_desc"):
+                sorted_arr = st.session_state.array.sort_desc()
+                
+                # Actually update the array elements to match sorted order
+                i = 0
+                while i < st.session_state.array.arrCount:
+                    st.session_state.array.arrElements[i] = sorted_arr[i]
+                    i += 1
                     
-            success, message = arr.delete(element)
-            print(message)
+                success_message("Array sorted in descending order")
+                st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Array sorted in descending order"})
+    
+    with col1:
+        st.subheader("Visualization")
+        if st.session_state.array is not None:
+            # Create a more visual representation of the array
+            elements = []
+            i = 0
+            while i < st.session_state.array.arrSize:
+                if i < st.session_state.array.arrCount:
+                    elements.append(st.session_state.array.arrElements[i])
+                else:
+                    elements.append(None)
+                i += 1
+                
+            # Display the array state
+            st.write(f"**Current Array (Size: {st.session_state.array.arrSize}, Count: {st.session_state.array.arrCount})**")
             
-        elif choice == '4':  # Sort ascending
-            sorted_arr = arr.sort_asc()
-            print("Array sorted in ascending order:")
-            print(sorted_arr)
+            # Create a more visual representation
+            cols = st.columns(len(elements))
+            for i, (col, element) in enumerate(zip(cols, elements)):
+                with col:
+                    if element is not None:
+                        st.markdown(f"""
+                        <div style="border: 2px solid #4e8df5; border-radius: 5px; padding: 10px; text-align: center; background-color: #e6f0ff;">
+                            <span style="font-weight: bold;">{element}</span>
+                            <hr style="margin: 5px 0;">
+                            <span style="color: gray; font-size: 0.8em;">Index: {i}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
+                    else:
+                        st.markdown(f"""
+                        <div style="border: 1px dashed #cccccc; border-radius: 5px; padding: 10px; text-align: center; background-color: #f8f9fa;">
+                            <span style="color: #cccccc;">Empty</span>
+                            <hr style="margin: 5px 0;">
+                            <span style="color: gray; font-size: 0.8em;">Index: {i}</span>
+                        </div>
+                        """, unsafe_allow_html=True)
             
-        elif choice == '5':  # Sort descending
-            sorted_arr = arr.sort_desc()
-            print("Array sorted in descending order:")
-            print(sorted_arr)
+            # Display sorted arrays if they exist
+            sorted_asc = st.session_state.array.sort_asc()
+            sorted_desc = st.session_state.array.sort_desc()
             
         else:
-            print("Invalid choice. Please try again.")
-            
-    return arr
+            st.info("Please create an array first to visualize it.")
 
-def handle_linked_list(linked_list):
-    while True:
-        choice = display_linked_list_menu()
+# Linked List Tab
+with tabs[1]:    
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        st.subheader("Operations")
+        if st.button("Create Empty Linked List", key="create_list"):
+            st.session_state.linked_list = LinkedList()
+            st.session_state.linked_list.create_linked_list()
+            success_message("Empty linked list created successfully.")
+            st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Empty linked list created"})
         
-        if choice == '0':  # Return to main menu
-            return linked_list
+        # Only show these operations if linked list exists
+        if st.session_state.linked_list is not None:
+            element_input = st.text_input("Element value:", key="list_element")
             
-        # Create linked list if not exists for other operations
-        if linked_list is None and choice != '1':
-            print("Please create a linked list first.")
-            continue
+            if st.button("Insert Element", key="insert_list"):
+                if element_input:
+                    element = convert_input(element_input)
+                    st.session_state.linked_list.insert(element)
+                    success_message("Element inserted successfully.")
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Element {element} inserted into linked list"})
+                else:
+                    warning_message("Please enter an element value")
             
-        if choice == '1':  # Create an Empty Linked List
-            linked_list = LinkedList()
-            linked_list.create_linked_list()
-            print("Empty linked list created successfully.")
+            if st.button("Delete Element", key="delete_list"):
+                if element_input:
+                    element = convert_input(element_input)
+                    success, message = st.session_state.linked_list.delete(element)
+                    if success:
+                        success_message(message)
+                    else:
+                        error_message(message)
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Delete attempt: {message}"})
+                else:
+                    warning_message("Please enter an element value")
             
-        elif choice == '2':  # Insert elements
-            element = input("Enter element to insert: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
+            if st.button("Reverse Linked List", key="reverse_list"):
+                st.session_state.linked_list.reverse()
+                success_message("Linked list reversed successfully.")
+                st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Linked list reversed"})
+            
+            if st.button("Remove Duplicates", key="remove_dups"):
+                st.session_state.linked_list.remove_duplicates()
+                success_message("Duplicates removed successfully.")
+                st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Duplicates removed from linked list"})
+    
+    with col1:
+        st.subheader("Visualization")
+        if st.session_state.linked_list is not None:
+            if st.session_state.linked_list.head is None:
+                st.info("The linked list is currently empty.")
+            else:
+                # Get all nodes for visualization
+                nodes = []
+                current = st.session_state.linked_list.head
+                while current is not None:
+                    nodes.append(current.data)
+                    current = current.next
+                
+                # Display the linked list
+                st.write(f"**Current Linked List (Size: {st.session_state.linked_list.size})**")
+                
+                # Create a horizontal visual representation
+                html_content = '<div class="linked-list-container">'
+                
+                for i, node in enumerate(nodes):
+                    html_content += f'<div class="linked-list-node"><span style="font-weight: bold;">{node}</span></div>'
                     
-            linked_list.insert(element)
-            print("Element inserted successfully.")
-            
-        elif choice == '3':  # Delete an element
-            element = input("Enter element to delete: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
-                    
-            success, message = linked_list.delete(element)
-            print(message)
-            
-        elif choice == '4':  # Reverse
-            linked_list.reverse()
-            print("Linked list reversed successfully.")
-            print("Reversed list:", linked_list.display())
-            
-        elif choice == '5':  # Remove duplicates
-            linked_list.remove_duplicates()
-            print("Duplicates removed successfully.")
-            print("List after removing duplicates:", linked_list.display())
-            
-        elif choice == '6':  # Display
-            print(linked_list.display())
-            
-        else:
-            print("Invalid choice. Please try again.")
-            
-    return linked_list
-
-def handle_stack(stack):
-    while True:
-        choice = display_stack_menu()
-        
-        if choice == '0':  # Return to main menu
-            return stack
-            
-        # Create stack if not exists for other operations
-        if stack is None and choice != '1':
-            print("Please create a stack first.")
-            continue
-            
-        if choice == '1':  # Create an Empty Stack
-            stack = Stack()  # Use default size of 5
-            stack.create_stack()
-            print("Empty stack created successfully with default size of 5.")
-            
-        elif choice == '2':  # Push
-            element = input("Enter element to push: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
-                    
-            success, message = stack.push(element)
-            print(message)
-            
-        elif choice == '3':  # Pop
-            element, message = stack.pop()
-            if element is not None:
-                print(f"Popped element: {element}")
-            print(message)
-            
-        elif choice == '4':  # Modify
-            try:
-                index = int(input("Enter index to modify: "))
-                element = input("Enter new value: ")
-                # Try to convert to appropriate type
-                try:
-                    element = int(element)
-                except ValueError:
-                    try:
-                        element = float(element)
-                    except ValueError:
-                        pass  # Keep as string
+                    if i < len(nodes) - 1:
+                        html_content += '<div class="linked-list-arrow">→</div>'
+                    else:
+                        html_content += '<div class="linked-list-arrow">→ null</div>'
                         
-                success, message = stack.modify(index, element)
-                print(message)
-            except ValueError:
-                print("Index must be an integer.")
-            
-        elif choice == '5':  # Display
-            print(stack.display())
-            
+                html_content += '</div>'
+                
+                st.markdown(html_content, unsafe_allow_html=True)
         else:
-            print("Invalid choice. Please try again.")
-            
-    return stack
+            st.info("Please create a linked list first to visualize it.")
 
-def handle_queue(queue):
-    while True:
-        choice = display_queue_menu()
+# Stack Tab
+with tabs[2]:    
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        st.subheader("Operations")
+        if st.button("Create Empty Stack", key="create_stack"):
+            st.session_state.stack = Stack()
+            st.session_state.stack.create_stack()
+            success_message("Empty stack created successfully with default size of 5.")
+            st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Empty stack created"})
         
-        if choice == '0':  # Return to main menu
-            return queue
+        # Only show these operations if stack exists
+        if st.session_state.stack is not None:
+            element_input = st.text_input("Element value:", key="stack_element")
             
-        # Create queue if not exists for other operations
-        if queue is None and choice != '1':
-            print("Please create a queue first.")
-            continue
+            if st.button("Push Element", key="push_stack"):
+                if element_input:
+                    element = convert_input(element_input)
+                    success, message = st.session_state.stack.push(element)
+                    if success:
+                        success_message(message)
+                    else:
+                        error_message(message)
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Push attempt: {message}"})
+                else:
+                    warning_message("Please enter an element value")
             
-        if choice == '1':  # Create an Empty Queue
-            queue = Queue()  # Use default size of 5
-            queue.create_queue()
-            print("Empty queue created successfully with default size of 5.")
+            if st.button("Pop Element", key="pop_stack"):
+                element, message = st.session_state.stack.pop()
+                if element is not None:
+                    success_message(f"Popped element: {element}")
+                else:
+                    error_message(message)
+                st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Pop attempt: {message}"})
             
-        elif choice == '2':  # Enqueue
-            element = input("Enter element to enqueue: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
+            # Modify element
+            modify_col1, modify_col2 = st.columns(2)
+            with modify_col1:
+                index_input = st.text_input("Index:", key="stack_index")
+            with modify_col2:
+                new_value_input = st.text_input("New Value:", key="stack_new_value")
+                
+            if st.button("Modify Element", key="modify_stack"):
+                if index_input and new_value_input:
+                    try:
+                        index = int(index_input)
+                        new_value = convert_input(new_value_input)
+                        success, message = st.session_state.stack.modify(index, new_value)
+                        if success:
+                            success_message(message)
+                        else:
+                            error_message(message)
+                        st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Modify attempt: {message}"})
+                    except ValueError:
+                        error_message("Index must be an integer.")
+                else:
+                    warning_message("Please enter both index and new value")
+    
+    with col1:
+        st.subheader("Visualization")
+        if st.session_state.stack is not None:
+            # Display stack information
+            st.write(f"**Current Stack (Size: {st.session_state.stack.stackSize}, Top: {st.session_state.stack.stackTop})**")
+            
+            if st.session_state.stack.stackTop == -1:
+                st.info("The stack is currently empty.")
+            else:
+                # Create a more visual representation of the stack
+                st.write("**Stack Elements (Bottom to Top)**")
+                
+                # Get elements for display
+                elements = []
+                i = 0
+                while i <= st.session_state.stack.stackTop:
+                    elements.append(st.session_state.stack.stackElements[i])
+                    i += 1
+                
+                # Display in reverse order (top to bottom)
+                for i, element in enumerate(reversed(elements)):
+                    position = len(elements) - i - 1
+                    is_top = position == st.session_state.stack.stackTop
                     
-            success, message = queue.enqueue(element)
-            print(message)
-            
-        elif choice == '3':  # Dequeue
-            element, message = queue.dequeue()
-            if element is not None:
-                print(f"Dequeued element: {element}")
-            print(message)
-            
-        elif choice == '4':  # Check front
-            element, index, message = queue.check_front()
-            if element is not None:
-                print(f"Front element: {element}, Index: {index}")
-            print(message)
-            
-        elif choice == '5':  # Check rear
-            element, index, message = queue.check_rear()
-            if element is not None:
-                print(f"Rear element: {element}, Index: {index}")
-            print(message)
-            
-        elif choice == '6':  # Display
-            print(queue.display())
-            
+                    bg_color = "#e6f0ff"
+                    border_color = "#4e8df5"
+                    
+                    if is_top:
+                        bg_color = "#4e8df5"
+                        border_color = "#0051a8"
+                        
+                    st.markdown(f"""
+                    <div style="
+                        border: 2px solid {border_color}; 
+                        border-radius: 5px; 
+                        padding: 15px; 
+                        margin-bottom: 5px; 
+                        text-align: center; 
+                        background-color: {bg_color}; 
+                        color: {'white' if is_top else 'black'};
+                        box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+                    ">
+                        <span style="font-weight: bold; font-size: 1.1em;">{element}</span>
+                        <span style="margin-left: 10px; font-size: 0.8em;">
+                            {f"← TOP (Index: {position})" if is_top else f"(Index: {position})"}
+                        </span>
+                    </div>
+                    """, unsafe_allow_html=True)
         else:
-            print("Invalid choice. Please try again.")
-            
-    return queue
+            st.info("Please create a stack first to visualize it.")
 
-def handle_binary_tree(binary_tree):
-    while True:
-        choice = display_binary_tree_menu()
+# Queue Tab
+with tabs[3]:    
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        st.subheader("Operations")
+        if st.button("Create Empty Queue", key="create_queue"):
+            st.session_state.queue = Queue()
+            st.session_state.queue.create_queue()
+            success_message("Empty queue created successfully with default size of 5.")
+            st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Empty queue created"})
         
-        if choice == '0':  # Return to main menu
-            return binary_tree
+        # Only show these operations if queue exists
+        if st.session_state.queue is not None:
+            element_input = st.text_input("Element value:", key="queue_element")
             
-        # Create binary tree if not exists for other operations
-        if binary_tree is None and choice != '1':
-            print("Please create a binary tree first.")
-            continue
+            if st.button("Enqueue Element", key="enqueue"):
+                if element_input:
+                    element = convert_input(element_input)
+                    success, message = st.session_state.queue.enqueue(element)
+                    if success:
+                        success_message(message)
+                    else:
+                        error_message(message)
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Enqueue attempt: {message}"})
+                else:
+                    warning_message("Please enter an element value")
             
-        if choice == '1':  # Create an Empty Binary Tree
-            binary_tree = BinaryTree()
-            binary_tree.create_binary_tree()
-            print("Empty binary tree created successfully.")
+            if st.button("Dequeue Element", key="dequeue"):
+                element, message = st.session_state.queue.dequeue()
+                if element is not None:
+                    success_message(f"Dequeued element: {element}")
+                else:
+                    error_message(message)
+                st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Dequeue attempt: {message}"})
             
-        elif choice == '2':  # Insert
-            element = input("Enter element to insert: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
-                    
-            binary_tree.insert(element)
-            print("Element inserted successfully.")
+            if st.button("Check Front", key="check_front"):
+                element, index, message = st.session_state.queue.check_front()
+                if element is not None:
+                    success_message(f"Front element: {element}, Index: {index}")
+                else:
+                    error_message(message)
             
-        elif choice == '3':  # Delete
-            element = input("Enter element to delete: ")
-            # Try to convert to appropriate type
-            try:
-                element = int(element)
-            except ValueError:
-                try:
-                    element = float(element)
-                except ValueError:
-                    pass  # Keep as string
-                    
-            success, message = binary_tree.delete(element)
-            print(message)
+            if st.button("Check Rear", key="check_rear"):
+                element, index, message = st.session_state.queue.check_rear()
+                if element is not None:
+                    success_message(f"Rear element: {element}, Index: {index}")
+                else:
+                    error_message(message)
+    
+    with col1:
+        st.subheader("Visualization")
+        if st.session_state.queue is not None:
+            # Display queue information
+            st.write(f"**Current Queue (Size: {st.session_state.queue.queueSize}, Count: {st.session_state.queue.queueCount})**")
+            st.write(f"**Front Index: {st.session_state.queue.queueFront}, Rear Index: {st.session_state.queue.queueRear}**")
             
-        elif choice == '4':  # Display inorder
-            print(binary_tree.display_binary_tree())
-            
-        elif choice == '5':  # Display tree structure
-            print(binary_tree.display_tree_structure())
-            
+            if st.session_state.queue.queueCount == 0:
+                st.info("The queue is currently empty.")
+            else:
+                # Create a more visual representation of the queue
+                st.write("**Queue Elements (Front to Rear)**")
+                
+                # Get elements for display
+                elements = []
+                i = st.session_state.queue.queueFront
+                count = 0
+                
+                while count < st.session_state.queue.queueCount:
+                    elements.append((i, st.session_state.queue.queueElements[i]))
+                    i = (i + 1) % st.session_state.queue.queueSize
+                    count += 1
+                
+                # Display horizontally
+                cols = st.columns(len(elements))
+                
+                for idx, (col, (i, element)) in enumerate(zip(cols, elements)):
+                    with col:
+                        is_front = i == st.session_state.queue.queueFront
+                        is_rear = i == st.session_state.queue.queueRear
+                        
+                        label = ""
+                        border_color = "#4e8df5"
+                        bg_color = "#e6f0ff"
+                        text_color = "black"
+                        
+                        if is_front and is_rear:
+                            label = "FRONT & REAR"
+                            border_color = "#9c27b0"
+                            bg_color = "#e1bee7"
+                        elif is_front:
+                            label = "FRONT"
+                            border_color = "#4caf50"
+                            bg_color = "#c8e6c9"
+                        elif is_rear:
+                            label = "REAR"
+                            border_color = "#f44336"
+                            bg_color = "#ffcdd2"
+                        
+                        st.markdown(f"""
+                        <div style="
+                            border: 2px solid {border_color}; 
+                            border-radius: 5px; 
+                            padding: 10px; 
+                            text-align: center; 
+                            background-color: {bg_color};
+                            color: {text_color};
+                            height: 100px;
+                            display: flex;
+                            flex-direction: column;
+                            justify-content: space-between;
+                        ">
+                            <div style="font-weight: bold; font-size: 0.8em;">{label}</div>
+                            <div style="font-weight: bold; font-size: 1.2em;">{element}</div>
+                            <div style="color: gray; font-size: 0.7em;">Index: {i}</div>
+                        </div>
+                        """, unsafe_allow_html=True)
+                
+                # Display directed arrow
+                if len(elements) > 1:
+                    st.markdown("""
+                    <div style="
+                        display: flex;
+                        justify-content: center;
+                        margin-top: 10px;
+                    ">
+                        <div style="
+                            background-color: #4e8df5;
+                            height: 2px;
+                            width: 80%;
+                            position: relative;
+                        ">
+                            <div style="
+                                position: absolute;
+                                right: -10px;
+                                top: -4px;
+                                width: 0;
+                                height: 0;
+                                border-top: 5px solid transparent;
+                                border-left: 10px solid #4e8df5;
+                                border-bottom: 5px solid transparent;
+                            "></div>
+                        </div>
+                    </div>
+                    """, unsafe_allow_html=True)
         else:
-            print("Invalid choice. Please try again.")
-            
-    return binary_tree
+            st.info("Please create a queue first to visualize it.")
 
-if __name__ == "__main__":
-    main()
+# Binary Search Tree Tab
+with tabs[4]:    
+    col1, col2 = st.columns([3, 1])
+    
+    with col2:
+        st.subheader("Operations")
+        if st.button("Create Empty Binary Tree", key="create_tree"):
+            st.session_state.binary_tree = BinaryTree()
+            st.session_state.binary_tree.create_binary_tree()
+            success_message("Empty binary tree created successfully.")
+            st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Empty binary tree created"})
+        
+        # Only show these operations if binary tree exists
+        if st.session_state.binary_tree is not None:
+            element_input = st.text_input("Element value:", key="tree_element")
+            
+            if st.button("Insert Element", key="insert_tree"):
+                if element_input:
+                    element = convert_input(element_input)
+                    st.session_state.binary_tree.insert(element)
+                    success_message("Element inserted successfully.")
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Element {element} inserted into binary tree"})
+                else:
+                    warning_message("Please enter an element value")
+            
+            if st.button("Delete Element", key="delete_tree"):
+                if element_input:
+                    element = convert_input(element_input)
+                    success, message = st.session_state.binary_tree.delete(element)
+                    if success:
+                        success_message(message)
+                    else:
+                        error_message(message)
+                    st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": f"Delete attempt: {message}"})
+                else:
+                    warning_message("Please enter an element value")
+    
+    with col1:
+        st.subheader("Visualization")
+        if st.session_state.binary_tree is not None:
+            # Display inorder traversal
+            inorder = st.session_state.binary_tree.display_binary_tree()
+            if inorder == "Empty tree":
+                st.info("The binary tree is currently empty.")
+            else:
+                st.write("**Inorder Traversal**")
+                st.write(inorder)
+                
+                # Display tree structure
+                st.write("**Tree Structure**")
+                tree_structure = st.session_state.binary_tree.display_tree_structure()
+                st.code(tree_structure)
+        else:
+            st.info("Please create a binary tree first to visualize it.")
+
+# Activity Log at the bottom
+with st.popover("Activity Log"):
+    if st.session_state.messages:
+        for msg in reversed(st.session_state.messages):
+            st.write(f"[{msg['time']}] {msg['message']}")
+    else:
+        st.write("No activity yet.")
+
+# Add a footer
+st.markdown("""
+---
+<div style="text-align: center;">
+    <p style="color: gray; font-size: 0.8em;">
+        <a href="https://www.linkedin.com/in/jpcurada/" target="_blank"><img src="https://img.shields.io/badge/LinkedIn-Connect-blue.svg" alt="LinkedIn"></a>  <a href="https://github.com/JpCurada" target="_blank"><img src="https://img.shields.io/badge/GitHub-Follow-black.svg" alt="GitHub"></a>
+    </p>
+</div>
+""", unsafe_allow_html=True)
