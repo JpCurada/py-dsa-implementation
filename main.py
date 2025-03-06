@@ -121,7 +121,7 @@ st.title("Data Structures Toolkit")
 st.write("Machine Problem 1 - COSC 203 Design and Analysis of Algorithms")
 st.caption("By: John Paul Curada of BS CS 2-5")
 
-# Create tabs for each data structure
+# navigation tabs for each data structure
 tabs = st.tabs(["Array", "Linked List", "Stack", "Queue", "Binary Search Tree"])
 
 # Array Tab
@@ -571,6 +571,9 @@ with tabs[3]:
             st.info("Please create a queue first to visualize it.")
 
 # Binary Search Tree Tab
+# Binary Search Tree Tab section in main.py
+
+# This code should be placed in the Binary Tree Tab section of main.py
 with tabs[4]:    
     col1, col2 = st.columns([3, 1])
     
@@ -615,8 +618,18 @@ with tabs[4]:
             if inorder == "Empty tree":
                 st.info("The binary tree is currently empty.")
             else:
-                st.write("**Inorder Traversal**")
+                st.write("**Inorder Traversal (Sorted Order)**")
                 st.write(inorder)
+                
+                # Display preorder traversal
+                preorder = st.session_state.binary_tree.display_preorder_traversal()
+                st.write("**Preorder Traversal (Root, Left, Right)**")
+                st.write(preorder)
+                
+                # Display postorder traversal
+                postorder = st.session_state.binary_tree.display_postorder_traversal()
+                st.write("**Postorder Traversal (Left, Right, Root)**")
+                st.write(postorder)
                 
                 # Display tree structure
                 st.write("**Tree Structure**")
