@@ -241,6 +241,8 @@ with tabs[1]:
         if st.button("Create Empty Linked List", key="create_list"):
             st.session_state.linked_list = LinkedList()
             st.session_state.linked_list.create_linked_list()
+            # Add a flag to track if the list is reversed or not
+            st.session_state.is_list_reversed = False
             success_message("Empty linked list created successfully.")
             st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Empty linked list created"})
         
@@ -271,6 +273,10 @@ with tabs[1]:
             
             if st.button("Reverse Linked List", key="reverse_list"):
                 st.session_state.linked_list.reverse()
+                # Toggle the reversed flag when the list is reversed
+                if 'is_list_reversed' not in st.session_state:
+                    st.session_state.is_list_reversed = False
+                st.session_state.is_list_reversed = not st.session_state.is_list_reversed
                 success_message("Linked list reversed successfully.")
                 st.session_state.messages.append({"time": datetime.now().strftime("%H:%M:%S"), "message": "Linked list reversed"})
             
@@ -295,17 +301,38 @@ with tabs[1]:
                 # Display the linked list
                 st.write(f"**Current Linked List (Size: {st.session_state.linked_list.size})**")
                 
+                # Check if the list is reversed
+                is_reversed = False
+                if 'is_list_reversed' in st.session_state:
+                    is_reversed = st.session_state.is_list_reversed
+                
+                st.write(f"**Direction: {'Reversed' if is_reversed else 'Normal'}**")
+                
                 # Create a horizontal visual representation
                 html_content = '<div class="linked-list-container">'
                 
-                for i, node in enumerate(nodes):
-                    html_content += f'<div class="linked-list-node"><span style="font-weight: bold;">{node}</span></div>'
+                if is_reversed:
+                    # Reversed visualization (right to left)
+                    # Fix the null pointer HTML to avoid rendering issues
+                    html_content = '<div class="linked-list-container">'
+                    html_content += '<div class="linked-list-arrow" style="margin-right: 5px;">null &larr;</div>'
                     
-                    if i < len(nodes) - 1:
-                        html_content += '<div class="linked-list-arrow">→</div>'
-                    else:
-                        html_content += '<div class="linked-list-arrow">→ null</div>'
+                    for i, node in enumerate(nodes):
+                        html_content += f'<div class="linked-list-node"><span style="font-weight: bold;">{node}</span></div>'
                         
+                        if i < len(nodes) - 1:
+                            html_content += '<div class="linked-list-arrow">&larr;</div>'
+                else:
+                    # Normal visualization (left to right)
+                    html_content = '<div class="linked-list-container">'
+                    for i, node in enumerate(nodes):
+                        html_content += f'<div class="linked-list-node"><span style="font-weight: bold;">{node}</span></div>'
+                        
+                        if i < len(nodes) - 1:
+                            html_content += '<div class="linked-list-arrow">&rarr;</div>'
+                        else:
+                            html_content += '<div class="linked-list-arrow">&rarr; null</div>'
+
                 html_content += '</div>'
                 
                 st.markdown(html_content, unsafe_allow_html=True)
